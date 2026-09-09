@@ -1,0 +1,49 @@
+#!/bin/bash
+
+SSH_CONFIG="$HOME/.ssh/config"
+PEM_FILE="$HOME/Downloads/labsuser.pem"
+
+echo "================================="
+echo "       AWS re/Start Lab"
+echo "================================="
+echo
+
+read -rp "Enter AWS Lab Public IP: " PUBLIC_IP
+
+if [[ -z "$PUBLIC_IP" ]]; then
+    echo "Error: IP address cannot be empty."
+    exit 1
+fi
+
+if [[ ! -f "$PEM_FILE" ]]; then
+    echo "Error: PEM file not found:"
+    echo "$PEM_FILE"
+    exit 1
+fi
+
+mkdir -p "$HOME/.ssh"
+touch "$SSH_CONFIG"
+chmod 700 "$HOME/.ssh"
+chmod 600 "$SSH_CONFIG"
+
+# Remove the existing aws-lab configuration
+sed -i '/^Host aws-lab$/,/^$/d' "$SSH_CONFIG"
+
+# Add the new configuration
+cat >> "$SSH_CONFIG" <<EOF
+Host aws-lab
+    HostName $PUBLIC_IP
+    User ec2-user
+    IdentityFile $PEM_FILE
+
+EOF
+
+echo
+echo "AWS Lab configuration updated."
+echo "Host: aws-lab"
+echo "IP:   $PUBLIC_IP"
+echo
+echo "Connecting..."
+echo
+
+ssh aws-lab
